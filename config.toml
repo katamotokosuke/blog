@@ -3,3 +3,4 @@ languageCode = "en-us"
 title = "/dev/null"
 theme = "hugo-classic"
 canonifyurls = true
+publishDir="docs"
