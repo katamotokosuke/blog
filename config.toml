@@ -1,6 +1,5 @@
 baseurl = "https://katamotokosuke.github.io/blog"
 languageCode = "en-us"
-title = "/dev/null"
+title = "カタモトの/dev/null"
 theme = "hugo-classic"
-canonifyurls = true
 publishDir="docs"
