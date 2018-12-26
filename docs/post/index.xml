@@ -6,10 +6,40 @@
     <description>Recent content in Posts on カタモトの/dev/null</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 25 Dec 2018 23:42:59 +0900</lastBuildDate>
+    <lastBuildDate>Wed, 26 Dec 2018 22:05:25 +0900</lastBuildDate>
     
 	<atom:link href="https://katamotokosuke.github.io/blog/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>mysql 5.6~でのalter tableでやらかさない</title>
+      <link>https://katamotokosuke.github.io/blog/post/mysql-alter-table/</link>
+      <pubDate>Wed, 26 Dec 2018 22:05:25 +0900</pubDate>
+      
+      <guid>https://katamotokosuke.github.io/blog/post/mysql-alter-table/</guid>
+      <description>はじめに mysql5.6の話をします。それ以上のバージョンでも通じる話ではあると思います。 どんなシステムでも本番稼働中にindexを貼りたい、テーブル定義(カラム名、型、並び順&amp;hellip;etc)の変更をしたいことは往々してあると思います。そんな時はalter tableコマンドを叩きたい気分になります。安直にコマンドをぶっ叩くとやらかしてしまう可能性があります。今後もやらかさないためにまとめておきます。
+環境 mysql&amp;gt; status; -------------- mysql Ver 14.14 Distrib 5.6.42, for Linux (x86_64) using EditLine wrapper Connection id:	3 Current database:	Current user:	root@localhost SSL:	Not in use Current pager:	stdout Using outfile:	&#39;&#39; Using delimiter:	; Server version:	5.6.42 MySQL Community Server (GPL) Protocol version:	10 Connection:	Localhost via UNIX socket Server characterset:	latin1 Db characterset:	latin1 Client characterset:	latin1 Conn. characterset:	latin1 UNIX socket:	/var/run/mysqld/mysqld.</description>
+    </item>
+    
+    <item>
+      <title>社会人学生を約半年やった所感</title>
+      <link>https://katamotokosuke.github.io/blog/post/worker-and-college-students/</link>
+      <pubDate>Wed, 26 Dec 2018 21:53:50 +0900</pubDate>
+      
+      <guid>https://katamotokosuke.github.io/blog/post/worker-and-college-students/</guid>
+      <description>社会人学生とは 社会人学生（しゃかいじんがくせい）とは、社会人として生きている者が、学生として大学に入学すること。
+https://ja.wikipedia.org/wiki/%E7%A4%BE%E4%BC%9A%E4%BA%BA%E5%AD%A6%E7%94%9F
+社会人としての自分 Web会社にてエンジニアとして働いています。主にサーバーサイドです。Rubyが割と好きです。座右の銘は「運用でカバー」
+学生としての自分 大学（通信制）１年生です。帝京大学という大学です。情報科学を学んでいます。
+学生になる方法 通信制であれば全日制の大学のように科目試験を受けて、他のライバルたちと戦って入学するほど狭き門ではないです。 帝京大学のCS学科は願書と志望動機のみで合格することが可能です。ですので、やることは願書と志望動機を期日を守って提出するだけです。そんなに難しいことはないです。
+#日常はこんな感じ まず、3ヶ月に1回単位修得試験があります。それに向けてレポートを提出して、それが合格すれば試験が受けられるようになるシステムです。そして試験も合格だと単位がいただけます。適当にレポートを書くと普通に不合格にされました。
+平日 9~20時くらいまで仕事です。 21~24時くらいまで勉強です。
+休日 9~12時まで勉強です。午後は適当に過ごしています。
+これくらいでレポートは作成できると思います。なので若干きついくらいでこなせない分量ではないです。 3ヶ月で３科目くらいです。
+メリット 4年頑張れば情報科学の学士が取得できます。 通信なので15万円/年くらいの学費で通えます。半端なく安いです。
+デメリット 時間の不足により技術のキャッチアップが大変です。 趣味にあてる時間の減少します。
+所感 入学する前は面白そうな本を好きなだけ読んでましたが、入学するとそうはいかなくなりました。個人的にあまり興味のない西洋史だとか社会学のような本を読まねばならず、その辺は大変です。本当はコンパイラだとか機械学習のことを学びたいのですが。 あとは前述しましたが、気になる技術を試す時間が減少します。まだこのあたりを解決する方法は見つけられてません。いい案があれば教えていただけると嬉しいです。 基本はe-ラーニングですが、たまに対面授業も行われます。みなさん割と仲良くしていて「ぼ、僕も頑張ろう。。。」とモチベの維持にもなっています。そして学食がうまい、安い。 私はそこまで利用できてませんが、世の中のさまざま学割を享受できると思います。まぁ常識の範囲内で使いましょう。 そして少し面倒な誘いに対して「今日はレポートの期限が近いので。。。」みたいな言い訳が行使できます。これも常識の範囲内で使いましょう。使いすぎると友達が減ります。 プログラミングをする科目もありますが、正直仕事でプログラムを書いている方からすれば寝ててもできるくらい楽勝です。この辺りは最小努力で最大単位を目指しましょう。</description>
+    </item>
     
     <item>
       <title>Railsのautoload_pathsでの定数探索</title>
