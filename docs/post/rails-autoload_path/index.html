@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Railsのautoload_pathsでの定数探索 | カタモトの/dev/null</title>
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/style.css" />
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/fonts.css" />
+    
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css" integrity="sha384-D+9gmBxUQogRLqvARvNLmA9hS2x//eK1FhVb9PiU86gmcrBrJAQT8okdJ4LMp2uv" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js" integrity="sha384-483A6DwYfKeDa0Q52fJmxFXkcPCFfnXMoXblOkJ4JcA8zATN6Tm78UNL72AKk+0O" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/contrib/auto-render.min.js" integrity="sha384-yACMu8JWxKzSp/C1YV86pzGiQ/l1YUfE8oPuahJQxzehAjEt2GiQuy/BIvl9KyeF" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body);
+        });
+    </script>
+
+<header>
+
+  
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <nav>
+    <ul>
+      
+      
+      <li class="pull-left ">
+        <a href="https://katamotokosuke.github.io/blog">/home/カタモトの/dev/null</a>
+      </li>
+      
+
+      
+
+    </ul>
+  </nav>
+</header>
+
+  </head>
+
+  <body>
+    <br/>
+
+<div class="article-meta">
+<h1><span class="title">Railsのautoload_pathsでの定数探索</span></h1>
+
+<h2 class="date">2018/12/25</h2>
+<p class="terms">
+  
+  
+  
+  
+  
+</p>
+</div>
+
+
+
+<main>
+
+
+<h1 id="環境">環境</h1>
+
+<ul>
+<li>Ruby 2.5.1</li>
+<li>Rails 5.2.0</li>
+</ul>
+
+<h1 id="autoload-pathsの概要">autoload_pathsの概要</h1>
+
+<p>例:</p>
+
+<pre><code class="language-ruby">class Hoge &lt; SuperHoge; end
+</code></pre>
+
+<p>のようにモデルを定義したとします。Hogeは未定義の場合定数作成され、定義済みであればオープンクラスされるためautoload_pathsの出番なしですが、SuperHogeのほうが未定義だった場合<code>autoload_paths</code>を元に定数を探索しに行きます。
+<code>autoload_paths</code>があるので</p>
+
+<pre><code class="language-ruby">require 'super_hoge'
+</code></pre>
+
+<p>といちいち書かなくてもよくなっています。</p>
+
+<pre><code class="language-ruby">puts ActiveSupport::Dependencies.autoload_paths
+RAILS_ROOT/app/assets
+RAILS_ROOT/app/channels
+RAILS_ROOT/app/controllers
+RAILS_ROOT/app/controllers/concerns
+RAILS_ROOT/app/helpers
+RAILS_ROOT/app/jobs
+RAILS_ROOT/app/mailers
+RAILS_ROOT/app/models
+RAILS_ROOT/app/models/concerns
+...etc
+</code></pre>
+
+<p>みたいにActiveSupport::Dependencies.autoload_pathsの結果が探索の対象になります。
+詳しくはwebで(<a href="https://railsguides.jp/autoloading_and_reloading_constants.html">https://railsguides.jp/autoloading_and_reloading_constants.html</a>)</p>
+
+<h1 id="実際のソースコードを見てみる">実際のソースコードを見てみる</h1>
+
+<p>rubyにはさまざまなフックメソッドが提供されていてその一つに定数が見つからないときに<code>Module#const_missing</code>というものがあります。これを<code>ActiveSupport::Dependencies::ModuleConstMissing</code>ではオーバーライドしています。このmoduleはrubyの<code>Module</code>に<code>include</code>されているのでRailsを使う際に定数が見つからないとこのメソッドのconst_missingが呼ばれることになります。なのでこれを見ていくことにします。</p>
+
+<p><a href="https://github.com/rails/rails/blob/5-2-0/activesupport/lib/active_support/dependencies.rb#L191">https://github.com/rails/rails/blob/5-2-0/activesupport/lib/active_support/dependencies.rb#L191</a></p>
+
+<pre><code class="language-ruby">def const_missing(const_name)
+  from_mod = anonymous? ? guess_for_anonymous(const_name) : self
+  Dependencies.load_missing_constant(from_mod, const_name)
+end
+</code></pre>
+
+<p>from_modはどの名前空間に属するかを特定しています。そして定数探索の旅が始まる！</p>
+
+<h1 id="activesupport-dependencies-load-missing-constant">ActiveSupport::Dependencies#load_missing_constant</h1>
+
+<p><a href="https://github.com/rails/rails/blob/master/activesupport/lib/active_support/dependencies.rb#L489">https://github.com/rails/rails/blob/master/activesupport/lib/active_support/dependencies.rb#L489</a></p>
+
+<p>2018/05/23時点のソースをのせる。</p>
+
+<pre><code class="language-ruby">    def load_missing_constant(from_mod, const_name)
+      unless qualified_const_defined?(from_mod.name) &amp;&amp; Inflector.constantize(from_mod.name).equal?(from_mod)
+        raise ArgumentError, &quot;A copy of #{from_mod} has been removed from the module tree but is still active!&quot;
+      end
+
+      qualified_name = qualified_name_for from_mod, const_name
+      path_suffix = qualified_name.underscore
+
+      file_path = search_for_file(path_suffix)
+
+      if file_path
+        expanded = File.expand_path(file_path)
+        expanded.sub!(/\.rb\z/, &quot;&quot;.freeze)
+
+        if loading.include?(expanded)
+          raise &quot;Circular dependency detected while autoloading constant #{qualified_name}&quot;
+        else
+          require_or_load(expanded, qualified_name)
+          raise LoadError, &quot;Unable to autoload constant #{qualified_name}, expected #{file_path} to define it&quot; unless from_mod.const_defined?(const_name, false)
+          return from_mod.const_get(const_name)
+        end
+      elsif mod = autoload_module!(from_mod, const_name, qualified_name, path_suffix)
+        return mod
+      elsif (parent = from_mod.parent) &amp;&amp; parent != from_mod &amp;&amp;
+            ! from_mod.parents.any? { |p| p.const_defined?(const_name, false) }
+        begin
+          return parent.const_missing(const_name)
+        rescue NameError =&gt; e
+          raise unless e.missing_name? qualified_name_for(parent, const_name)
+        end
+      end
+</code></pre>
+
+<p>上から適当に見ていくと<code>qualified_name_for</code>で<code>Hoge::Fuga::Bar</code>のような文字列取得して、<code>underscore</code>で<code>hoge/fuga/bar</code>のような文字列を生成しています。それを<code>search_for_file</code>(あとでみる)でファイルを探しています。
+その絶対パスを取得して、<code>require_or_load</code>を呼びだして定数をrequireかロードし、その後そのmoduleがreturnされます。</p>
+
+<p>もしsearch_for_fileの返り値がなければ<code>autoload_module</code>を呼び出す。
+<code>autoload_module</code>は &ndash;&gt; 予想されるパスサフィックスに一致するディレクトリを検索して、提供されたモジュール名を自動ロードしようとします。 見つかった場合、モジュールは作成され、+ const_name +という名前の定数に+ from_mod +の定数に代入されます。 ディレクトリが再ロード可能なベースパスからロードされていれば、アンロードされる定数セットに追加されます。</p>
+
+<p>らしいです。何かしらが代入されて場合、そのmoduleを返します。あとは例外処理なので省略。</p>
+
+<h1 id="search-for-file-を読む"><code>search_for_file</code>を読む</h1>
+
+<p><a href="https://github.com/rails/rails/blob/5-2-0/activesupport/lib/active_support/dependencies.rb#L414">https://github.com/rails/rails/blob/5-2-0/activesupport/lib/active_support/dependencies.rb#L414</a></p>
+
+<pre><code class="language-ruby">def search_for_file(path_suffix)
+  path_suffix = path_suffix.sub(/(\.rb)?$/, &quot;.rb&quot;.freeze)
+  autoload_paths.each do |root|
+    path = File.join(root, path_suffix)
+    return path if File.file? path
+  end
+  nil
+end
+
+</code></pre>
+
+<p>やっと出現しました<code>autoload_paths</code>。
+実装は単純で、<code>autoload_paths</code>をぶん回して<code>path_suffix</code>(探索対象のモジュールの名前空間に対応するファイルパス)と各要素を結合します。それがファイルならばその文字列を返します。</p>
+
+<h1 id="まとめ">まとめ</h1>
+
+<p>支離滅裂に書いてきたが、<code>ActiveSupport::Dependencies::ModuleConstMissing#const_missing</code>では未定義の定数をautoload_pathsをもとに読み込んでいます。</p>
+
+</main>
+
+    <footer>
+      
+<script>
+(function() {
+  function center_el(tagName) {
+    var tags = document.getElementsByTagName(tagName), i, tag;
+    for (i = 0; i < tags.length; i++) {
+      tag = tags[i];
+      var parent = tag.parentElement;
+      
+      if (parent.childNodes.length === 1) {
+        
+        if (parent.nodeName === 'A') {
+          parent = parent.parentElement;
+          if (parent.childNodes.length != 1) continue;
+        }
+        if (parent.nodeName === 'P') parent.style.textAlign = 'center';
+      }
+    }
+  }
+  var tagNames = ['img', 'embed', 'object'];
+  for (var i = 0; i < tagNames.length; i++) {
+    center_el(tagNames[i]);
+  }
+})();
+</script>
+
+      
+    </footer>
+  </body>
+</html>
+

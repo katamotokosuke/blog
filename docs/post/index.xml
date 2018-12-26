@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes" ?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>カタモトの/dev/null</title>
-    <link>https://katamotokosuke.github.io/blog/</link>
-    <description>Recent content on カタモトの/dev/null</description>
+    <title>Posts on カタモトの/dev/null</title>
+    <link>https://katamotokosuke.github.io/blog/post/</link>
+    <description>Recent content in Posts on カタモトの/dev/null</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
     <lastBuildDate>Tue, 25 Dec 2018 23:42:59 +0900</lastBuildDate>
     
-	<atom:link href="https://katamotokosuke.github.io/blog/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://katamotokosuke.github.io/blog/post/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
