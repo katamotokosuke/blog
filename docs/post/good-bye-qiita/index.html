@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>さよならQiita、こんにちはhugo × github pages | カタモトの/dev/null</title>
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/style.css" />
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/fonts.css" />
+    
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css" integrity="sha384-D+9gmBxUQogRLqvARvNLmA9hS2x//eK1FhVb9PiU86gmcrBrJAQT8okdJ4LMp2uv" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js" integrity="sha384-483A6DwYfKeDa0Q52fJmxFXkcPCFfnXMoXblOkJ4JcA8zATN6Tm78UNL72AKk+0O" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/contrib/auto-render.min.js" integrity="sha384-yACMu8JWxKzSp/C1YV86pzGiQ/l1YUfE8oPuahJQxzehAjEt2GiQuy/BIvl9KyeF" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body);
+        });
+    </script>
+
+<header>
+
+  
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <nav>
+    <ul>
+      
+      
+      <li class="pull-left ">
+        <a href="https://katamotokosuke.github.io/blog">/home/カタモトの/dev/null</a>
+      </li>
+      
+
+      
+
+    </ul>
+  </nav>
+</header>
+
+  </head>
+
+  <body>
+    <br/>
+
+<div class="article-meta">
+<h1><span class="title">さよならQiita、こんにちはhugo × github pages</span></h1>
+
+<h2 class="date">2019/02/03</h2>
+<p class="terms">
+  
+  
+  
+  
+  
+</p>
+</div>
+
+
+
+<main>
+
+
+<h1 id="対象">対象</h1>
+
+<ul>
+<li>Qiitaから脱したい</li>
+<li>Qiitaにはエモ記事が書けないので、そういった記事を独自のブログの方に書きたい</li>
+</ul>
+
+<h1 id="hugoとは">hugoとは</h1>
+
+<p><a href="https://gohugo.io/">https://gohugo.io/</a></p>
+
+<pre><code>Hugo is one of the most popular open-source static site generators.
+With its amazing speed and flexibility, Hugo makes building websites fun again.
+</code></pre>
+
+<p>Hugoは人気のあるオープンソースの静的サイトジェネレータの1つである。
+半端ないスピードと柔軟性で、Hugoは再びウェブサイトの構築を楽しくするぜ。</p>
+
+<p>と公式HPには書いてあります。</p>
+
+<h1 id="インストール">インストール</h1>
+
+<p>プラットフォームによってインストール方法が異なります。
+Mac</p>
+
+<pre><code>$ brew install hugo
+</code></pre>
+
+<p>Win
+choco</p>
+
+<pre><code>$ choco install hugo -confirm
+</code></pre>
+
+<p>Win
+scoop</p>
+
+<pre><code>$ scoop install hugo
+</code></pre>
+
+<p>Linux
+snap</p>
+
+<pre><code>$ snap install hugo
+</code></pre>
+
+<p>などなど、、、。さまざまなPFに対応しています。
+<a href="https://gohugo.io/getting-started/installing">https://gohugo.io/getting-started/installing</a></p>
+
+<h1 id="さっそくブログを作ってみる">さっそくブログを作ってみる</h1>
+
+<h2 id="雛形作成">雛形作成</h2>
+
+<p>雛形を作成するために以下のコマンドを実行します。</p>
+
+<pre><code>$ hugo new site site-demo &amp;&amp; cd site-demo
+</code></pre>
+
+<p>なにやら生成されたようです</p>
+
+<pre><code>$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+├── data
+├── layouts
+├── static
+└── themes
+
+6 directories, 2 files
+</code></pre>
+
+<p>できました。現時点だと空のディレクトリが掘られているだけのようです。</p>
+
+<h2 id="テーマの選定">テーマの選定</h2>
+
+<p>なんと、サイトの雛形は完成しました。これからどんなデザインのページにするかを決定していきます。<a href="https://themes.gohugo.io/">https://themes.gohugo.io/</a> に主要なテーマが列挙されています。今回は
+<a href="URL" title="https://themes.gohugo.io/hugo-classic/">hugo-classic</a>でdemoを進めたいと思います。</p>
+
+<p>先ほど作成したthemesというディレクトリにテーマをgit submoduleの形として入れるとGOODです。</p>
+
+<pre><code>$ git init &amp;&amp; git submodule add https://github.com/goodroot/hugo-classic.git themes/hugo-classic;
+</code></pre>
+
+<p>themesにはhugo-classic以外にも使いたいテーマをどんどん追加していっても良いでしょう。ただ、そのままだとどのテーマを使って良いかわからいので、config.tomlにhugo-classicを使いますということを宣言しておきましょう。</p>
+
+<pre><code class="language-config.toml">baseURL = &quot;http://example.org/&quot;
+languageCode = &quot;en-us&quot;
+title = &quot;My New Hugo Site&quot;
+theme = &quot;hugo-classic&quot; #######################ここが追加した行
+</code></pre>
+
+<p>テーマの選定はなんと、以上です。</p>
+
+<p>これで記事はまだないですが画面になにかしら表示されるようにはなります。早速画面を表示して見ます。</p>
+
+<pre><code>hugo server
+</code></pre>
+
+<p>localhost:1313にアクセス！！</p>
+
+<p><img src="https://qiita-image-store.s3.amazonaws.com/0/155328/f6dc4c3c-b78e-61db-8729-db5db4af7679.png" alt="hugo-demo-starting.png" /></p>
+
+<p>何か表示されました。まぁ、記事も書いてませんし、テーマのカスタムも行なっておりませんので、及第点とさせてください。</p>
+
+<h2 id="記事をついに書く">記事をついに書く</h2>
+
+<p>雛形作成　-&gt; テーマ選定まで終わりました。ので、あとは記事を書くだけです。markdownで記事を書いていきます。</p>
+
+<pre><code>$ hugo new post/starting-demo.md
+</code></pre>
+
+<p>content/post直下にコマンドで指定したファイルが生成されました。</p>
+
+<pre><code>$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+│   └── post
+│       └── starting-demo.md ######################################ここ
+├── data
+├── layouts
+├── resources
+│   └── _gen
+│       ├── assets
+│       └── images
+├── static
+└── themes
+    └── hugo-classic
+        ├── LICENSE.md
+        ├── README.md
+        ├── archetypes
+        │   └── default.md
+        ├── exampleSite
+        │   ├── config.toml
+        │   ├── content
+        │   │   ├── _index.md
+        │   │   └── post
+        │   │       ├── 2012-01-23-juicy-code.md
+        │   │       ├── 2012-04-23-hacker-with-horn.md
+        │   │       ├── 2015-07-23-command-line-awesomeness.md
+        │   │       └── 2018-08-30-markdown-guide.md
+        │   └── static
+        │       └── css
+        │           └── theme-override.css
+        ├── images
+        │   ├── partywizard.gif
+        │   ├── screenshot.png
+        │   └── tn.png
+        ├── layouts
+        │   ├── 404.html
+        │   ├── _default
+        │   │   ├── list.html
+        │   │   ├── single.html
+        │   │   └── terms.html
+        │   └── partials
+        │       ├── foot_custom.html
+        │       ├── footer.html
+        │       ├── head_custom.html
+        │       └── header.html
+        ├── static
+        │   └── css
+        │       ├── fonts.css
+        │       └── style.css
+        └── theme.toml
+
+24 directories, 27 files
+
+</code></pre>
+
+<p>初期状態は以下のような状態です。下書き状態のようです。</p>
+
+<pre><code class="language-markdown:starting-demo.md">---
+title: &quot;Starting Demo&quot;
+date: 生成した日時
+draft: true
+---
+
+</code></pre>
+
+<p>適当に内容を書いた後、<code>draft: false</code>にして</p>
+
+<pre><code>$ hugo
+</code></pre>
+
+<p>で、記事の内容を反映させます。</p>
+
+<pre><code>$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+│   └── post
+│       └── starting-demo.md
+├── data
+├── layouts
+├── public
+│   ├── 404.html
+│   ├── categories
+│   │   ├── index.html
+│   │   └── index.xml
+│   ├── css
+│   │   ├── fonts.css
+│   │   └── style.css
+│   ├── index.html
+│   ├── index.xml
+│   ├── sitemap.xml
+│   └── tags
+│       ├── index.html
+│       └── index.xml
+├── resources
+│   └── _gen
+│       ├── assets
+│       └── images
+├── static
+└── themes
+    └── hugo-classic
+        ├── LICENSE.md
+        ├── README.md
+        ├── archetypes
+        │   └── default.md
+        ├── exampleSite
+        │   ├── config.toml
+        │   ├── content
+        │   │   ├── _index.md
+        │   │   └── post
+        │   │       ├── 2012-01-23-juicy-code.md
+        │   │       ├── 2012-04-23-hacker-with-horn.md
+        │   │       ├── 2015-07-23-command-line-awesomeness.md
+        │   │       └── 2018-08-30-markdown-guide.md
+        │   └── static
+        │       └── css
+        │           └── theme-override.css
+        ├── images
+        │   ├── partywizard.gif
+        │   ├── screenshot.png
+        │   └── tn.png
+        ├── layouts
+        │   ├── 404.html
+        │   ├── _default
+        │   │   ├── list.html
+        │   │   ├── single.html
+        │   │   └── terms.html
+        │   └── partials
+        │       ├── foot_custom.html
+        │       ├── footer.html
+        │       ├── head_custom.html
+        │       └── header.html
+        ├── static
+        │   └── css
+        │       ├── fonts.css
+        │       └── style.css
+        └── theme.toml
+
+28 directories, 37 files
+
+</code></pre>
+
+<p>新たにpublicディレクトリが生成され、その中にいろいろとファイルができました。</p>
+
+<p><img src="https://qiita-image-store.s3.amazonaws.com/0/155328/e20a84ed-5598-1211-8d21-cee56dbf1743.png" alt="after_post.png" /></p>
+
+<p>トップページにも記事が出てきました。このリンクをクリックすると記事のページに遷移することができます。</p>
+
+<h1 id="github-pagesで公開">github pagesで公開</h1>
+
+<p>いままでのプロセスで記事を簡単に書くことができます。あとはアクセスできるようにするだけです。VPSを借りて己でWEBサーバーを立てるのもひとつの手段ではあると思いますが、今回はもっと簡単なgithub pagesを利用して秒速で構築したいと思います。</p>
+
+<h2 id="公開ディレクトリを指定">公開ディレクトリを指定</h2>
+
+<p>今回はmasterブランチのdocsディレクトリ直下を公開ディレクトリとして指定します。その宣言をconfig.tomlに書きます。</p>
+
+<pre><code class="language-toml:config.toml">baseURL = &quot;https://katamotokosuke.github.io/site-demo/&quot; ####### 追加: {user_name}.github.io/{repository_name}/ を指定する
+languageCode = &quot;en-us&quot;
+title = &quot;My New Hugo Site&quot;
+theme = &quot;hugo-classic&quot;
+publishDir = &quot;docs&quot;  ######################### 追加
+canonifyurls = true  ######################## 追加(相対URLを絶対URLに変換できるようにします。)
+
+</code></pre>
+
+<p>記述を変更した後<code>hugo</code>コマンドを実行します。</p>
+
+<pre><code>$ tree
+.
+├── archetypes
+│   └── default.md
+├── config.toml
+├── content
+│   └── post
+│       └── starting-demo.md
+├── data
+├── docs
+│   ├── 404.html
+│   ├── categories
+│   │   ├── index.html
+│   │   └── index.xml
+│   ├── css
+│   │   ├── fonts.css
+│   │   └── style.css
+│   ├── index.html
+│   ├── index.xml
+│   ├── post
+│   │   ├── index.html
+│   │   ├── index.xml
+│   │   └── starting-demo
+│   │       └── index.html
+│   ├── sitemap.xml
+│   └── tags
+│       ├── index.html
+│       └── index.xml
+├── layouts
+├── public
+│   ├── 404.html
+│   ├── categories
+│   │   ├── index.html
+│   │   └── index.xml
+│   ├── css
+│   │   ├── fonts.css
+│   │   └── style.css
+│   ├── index.html
+│   ├── index.xml
+│   ├── post
+│   │   ├── index.html
+│   │   ├── index.xml
+│   │   └── starting-demo
+│   │       └── index.html
+│   ├── sitemap.xml
+│   └── tags
+│       ├── index.html
+│       └── index.xml
+├── resources
+│   └── _gen
+│       ├── assets
+│       └── images
+├── static
+└── themes
+    └── hugo-classic
+        ├── LICENSE.md
+        ├── README.md
+        ├── archetypes
+        │   └── default.md
+        ├── exampleSite
+        │   ├── config.toml
+        │   ├── content
+        │   │   ├── _index.md
+        │   │   └── post
+        │   │       ├── 2012-01-23-juicy-code.md
+        │   │       ├── 2012-04-23-hacker-with-horn.md
+        │   │       ├── 2015-07-23-command-line-awesomeness.md
+        │   │       └── 2018-08-30-markdown-guide.md
+        │   └── static
+        │       └── css
+        │           └── theme-override.css
+        ├── images
+        │   ├── partywizard.gif
+        │   ├── screenshot.png
+        │   └── tn.png
+        ├── layouts
+        │   ├── 404.html
+        │   ├── _default
+        │   │   ├── list.html
+        │   │   ├── single.html
+        │   │   └── terms.html
+        │   └── partials
+        │       ├── foot_custom.html
+        │       ├── footer.html
+        │       ├── head_custom.html
+        │       └── header.html
+        ├── static
+        │   └── css
+        │       ├── fonts.css
+        │       └── style.css
+        └── theme.toml
+
+36 directories, 53 files
+
+</code></pre>
+
+<p>docsディレクトリが生成されました。宣言をしなければpublicディレクトリが生成されます。なので、すでに作られているpublicディレクトリはこれから不要となりますので、削除しても良いと思います。</p>
+
+<h2 id="github側の設定">github側の設定</h2>
+
+<ul>
+<li>以上の成果物をgithub上にpushします。</li>
+<li>リポジトリの<code>Setting</code> (<a href="https://github.com/#{user_name}/#{repositoryn_name}/settings">https://github.com/#{user_name}/#{repositoryn_name}/settings</a> )の<code>GitHub Pages</code>という設定の項目を見つける。(おそらく設定を指定なければNoneという値が選択されていると思います。)</li>
+<li><code>master branch docs/ folder</code> を選択</li>
+<li>save</li>
+</ul>
+
+<p>少し時間をおくと　<a href="https://katamotokosuke.github.io/site-demo/">https://katamotokosuke.github.io/site-demo/</a> にアクセスできるようになりました。</p>
+
+<h1 id="まとめ">まとめ</h1>
+
+<p>hugoとgithub pagesを用いて簡単にQiitaを脱することができました。これでエモ記事が書けるようになりました。
+この記事では扱いませんでしたが、テーマをカスタマイズすることも可能です。そうすることでよりオリジナリティのあるWebページが構築できます。</p>
+
+<h1 id="参考">参考</h1>
+
+<p>今回のデモで作成したgithubのソース: <a href="https://github.com/katamotokosuke/site-demo">https://github.com/katamotokosuke/site-demo</a>
+デモで作成したWebページ: <a href="https://katamotokosuke.github.io/site-demo/">https://katamotokosuke.github.io/site-demo/</a>
+Hugo: <a href="https://gohugo.io/">https://gohugo.io/</a></p>
+
+</main>
+
+    <footer>
+      
+<script>
+(function() {
+  function center_el(tagName) {
+    var tags = document.getElementsByTagName(tagName), i, tag;
+    for (i = 0; i < tags.length; i++) {
+      tag = tags[i];
+      var parent = tag.parentElement;
+      
+      if (parent.childNodes.length === 1) {
+        
+        if (parent.nodeName === 'A') {
+          parent = parent.parentElement;
+          if (parent.childNodes.length != 1) continue;
+        }
+        if (parent.nodeName === 'P') parent.style.textAlign = 'center';
+      }
+    }
+  }
+  var tagNames = ['img', 'embed', 'object'];
+  for (var i = 0; i < tagNames.length; i++) {
+    center_el(tagNames[i]);
+  }
+})();
+</script>
+
+      
+    </footer>
+  </body>
+</html>
+

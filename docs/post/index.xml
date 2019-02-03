@@ -6,10 +6,49 @@
     <description>Recent content in Posts on カタモトの/dev/null</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 26 Dec 2018 22:05:25 +0900</lastBuildDate>
+    <lastBuildDate>Sun, 03 Feb 2019 22:07:02 +0900</lastBuildDate>
     
 	<atom:link href="https://katamotokosuke.github.io/blog/post/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>JSON Web Tokenを完全に理解する</title>
+      <link>https://katamotokosuke.github.io/blog/post/jwt/</link>
+      <pubDate>Sun, 03 Feb 2019 22:07:02 +0900</pubDate>
+      
+      <guid>https://katamotokosuke.github.io/blog/post/jwt/</guid>
+      <description>JSON Web Tokenとは ざっくり言うと「2者間で安全にクレームを表現するための方式」です。RFC7519で技術仕様の標準化が行われています。JSON Web Token(以下JWT)は大きく分けて3つの属性に分割できます。ヘッダー、ペイロード、署名の3つです。ペイロードには実際に2者間(クライアント・サーバー間と考えると分かりやすいかもしれません)で受け渡しがしたいJSONが入り、ヘッダー、署名を使って改ざんの検証に用いられます。
+まだぼんやりしていて分かりにくいですが、各属性がどのようなものなのかもう少し具体的に見ていくことにします。その後、実際にどのように使っていくかを見ると理解はしやすくなります。
+ヘッダー属性 ヘッダーにはどのようなアルゴリズムを用いて署名を行っているかやトークンのタイプの2つで構成されています。
+例：
+{ &amp;quot;alg&amp;quot;: &amp;quot;RS256&amp;quot;, &amp;quot;typ&amp;quot;: &amp;quot;JWT&amp;quot; }  この文字列をbase64urlエンコードしたものがJWTのヘッダーとなります。プログラムっぽく書くならばこんな感じです。
+header = base64url_encode(&#39;{&amp;quot;alg&amp;quot;:&amp;quot;RS256&amp;quot;,&amp;quot;typ&amp;quot;:&amp;quot;JWT&amp;quot;}&#39;)  ヘッダーに関しては以上です。とても単純な仕様ですね。
+ペイロード 実際に2者間で受け渡ししたい実体の入る属性です。要領はヘッダーと同じです。 例：
+{ &amp;quot;exp&amp;quot;: &amp;quot;1550905975&amp;quot;, &amp;quot;name&amp;quot;: &amp;quot;k_k_hogetaro&amp;quot;, &amp;quot;is_engineer&amp;quot;: true }  ヘッダーと同じくペイロードもbase64urlエンコードしたものとなります。 ヘッダーと違う点を挙げるとするといくつか予約語が定義されています。上の例であるとexpは仕様で定められた予約のkeyとなります。その他の予約語は仕様書を参照してみてください。
+署名 ペイロード属性はbase64urlエンコードされているだけですので、このままだとデコードすれば中身を確認でき、改変できてしまいます。それだと困る場合がいろいろあります。例えばCookieの値とか。そこで署名を行い、改変の有無を検証可能なものにします。 ハッシュアルゴリズムHS256のケースを例とします。他のアルゴリズムのケースも後述します。 HS256は共通の秘密鍵で署名、検証を行います。
+プログラムのように書くと以下のようになります。
+value = header + &amp;quot;.&amp;quot; + payload + &amp;quot;.&amp;quot; # base64urlエンコード済みのヘッダーとペイロードを「.」で繋いだ形のものを用います。 signature = hash256(value, secret_key);  これが署名のすべてです。
+JWTの完成形 これでJWTのすべてが揃いました。ヘッダー、ペイロード、そして署名です。これらを「.」で繋いだものがJWTとなります。
+JWT = &amp;quot;#{header}.#{payload}.#{signature}&amp;quot;  JWTの使われ方 ↑まででJWTの具体的な形を見てきました。しかし、まだどのように使われるかが全くわかりません。なので、実際にどのような使われ方があるのか見ていきます。
+アルゴリズムHS256の場合 署名のところでもHS256は扱いましたが、共通の鍵を用いて署名と検証を行います。なので、以下のようなケースが想定されます。あくまで一例です。</description>
+    </item>
+    
+    <item>
+      <title>さよならQiita、こんにちはhugo × github pages</title>
+      <link>https://katamotokosuke.github.io/blog/post/good-bye-qiita/</link>
+      <pubDate>Sun, 03 Feb 2019 22:03:59 +0900</pubDate>
+      
+      <guid>https://katamotokosuke.github.io/blog/post/good-bye-qiita/</guid>
+      <description>対象  Qiitaから脱したい Qiitaにはエモ記事が書けないので、そういった記事を独自のブログの方に書きたい  hugoとは https://gohugo.io/
+Hugo is one of the most popular open-source static site generators. With its amazing speed and flexibility, Hugo makes building websites fun again.  Hugoは人気のあるオープンソースの静的サイトジェネレータの1つである。 半端ないスピードと柔軟性で、Hugoは再びウェブサイトの構築を楽しくするぜ。
+と公式HPには書いてあります。
+インストール プラットフォームによってインストール方法が異なります。 Mac
+$ brew install hugo  Win choco
+$ choco install hugo -confirm  Win scoop
+$ scoop install hugo  Linux snap
+$ snap install hugo  などなど、、、。さまざまなPFに対応しています。 https://gohugo.io/getting-started/installing
+さっそくブログを作ってみる 雛形作成 雛形を作成するために以下のコマンドを実行します。</description>
+    </item>
     
     <item>
       <title>mysql 5.6~でのalter tableでやらかさない</title>

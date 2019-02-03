@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>JSON Web Tokenを完全に理解する | カタモトの/dev/null</title>
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/style.css" />
+    <link rel="stylesheet" href="https://katamotokosuke.github.io/blog/css/fonts.css" />
+    
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.css" integrity="sha384-D+9gmBxUQogRLqvARvNLmA9hS2x//eK1FhVb9PiU86gmcrBrJAQT8okdJ4LMp2uv" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/katex.min.js" integrity="sha384-483A6DwYfKeDa0Q52fJmxFXkcPCFfnXMoXblOkJ4JcA8zATN6Tm78UNL72AKk+0O" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.10.0-rc.1/dist/contrib/auto-render.min.js" integrity="sha384-yACMu8JWxKzSp/C1YV86pzGiQ/l1YUfE8oPuahJQxzehAjEt2GiQuy/BIvl9KyeF" crossorigin="anonymous"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            renderMathInElement(document.body);
+        });
+    </script>
+
+<header>
+
+  
+  <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/atom-one-light.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  <script>hljs.initHighlightingOnLoad();</script>
+  <nav>
+    <ul>
+      
+      
+      <li class="pull-left ">
+        <a href="https://katamotokosuke.github.io/blog">/home/カタモトの/dev/null</a>
+      </li>
+      
+
+      
+
+    </ul>
+  </nav>
+</header>
+
+  </head>
+
+  <body>
+    <br/>
+
+<div class="article-meta">
+<h1><span class="title">JSON Web Tokenを完全に理解する</span></h1>
+
+<h2 class="date">2019/02/03</h2>
+<p class="terms">
+  
+  
+  
+  
+  
+</p>
+</div>
+
+
+
+<main>
+
+
+<h1 id="json-web-tokenとは">JSON Web Tokenとは</h1>
+
+<p>ざっくり言うと「2者間で安全にクレームを表現するための方式」です。<a href="https://tools.ietf.org/html/rfc7519">RFC7519</a>で技術仕様の標準化が行われています。JSON Web Token(以下JWT)は大きく分けて3つの属性に分割できます。ヘッダー、ペイロード、署名の3つです。ペイロードには実際に2者間(クライアント・サーバー間と考えると分かりやすいかもしれません)で受け渡しがしたいJSONが入り、ヘッダー、署名を使って改ざんの検証に用いられます。</p>
+
+<p>まだぼんやりしていて分かりにくいですが、各属性がどのようなものなのかもう少し具体的に見ていくことにします。その後、実際にどのように使っていくかを見ると理解はしやすくなります。</p>
+
+<h2 id="ヘッダー属性">ヘッダー属性</h2>
+
+<p>ヘッダーにはどのようなアルゴリズムを用いて署名を行っているかやトークンのタイプの2つで構成されています。</p>
+
+<p>例：</p>
+
+<pre><code class="language-json">{
+  &quot;alg&quot;: &quot;RS256&quot;,
+  &quot;typ&quot;: &quot;JWT&quot;
+}
+</code></pre>
+
+<p>この文字列をbase64urlエンコードしたものがJWTのヘッダーとなります。プログラムっぽく書くならばこんな感じです。</p>
+
+<pre><code class="language-ruby">header = base64url_encode('{&quot;alg&quot;:&quot;RS256&quot;,&quot;typ&quot;:&quot;JWT&quot;}')
+</code></pre>
+
+<p>ヘッダーに関しては以上です。とても単純な仕様ですね。</p>
+
+<h2 id="ペイロード">ペイロード</h2>
+
+<p>実際に2者間で受け渡ししたい実体の入る属性です。要領はヘッダーと同じです。
+例：</p>
+
+<pre><code class="language-json">{
+  &quot;exp&quot;: &quot;1550905975&quot;,
+  &quot;name&quot;: &quot;k_k_hogetaro&quot;,
+  &quot;is_engineer&quot;: true
+}
+
+</code></pre>
+
+<p>ヘッダーと同じくペイロードもbase64urlエンコードしたものとなります。
+ヘッダーと違う点を挙げるとするといくつか予約語が定義されています。上の例であるとexpは仕様で定められた予約のkeyとなります。その他の予約語は<a href="https://tools.ietf.org/html/draft-jones-json-web-token-07#section-4.1">仕様書</a>を参照してみてください。</p>
+
+<h2 id="署名">署名</h2>
+
+<p>ペイロード属性はbase64urlエンコードされているだけですので、このままだとデコードすれば中身を確認でき、改変できてしまいます。それだと困る場合がいろいろあります。例えばCookieの値とか。そこで署名を行い、改変の有無を検証可能なものにします。
+ハッシュアルゴリズムHS256のケースを例とします。他のアルゴリズムのケースも後述します。
+HS256は共通の秘密鍵で署名、検証を行います。</p>
+
+<p>プログラムのように書くと以下のようになります。</p>
+
+<pre><code class="language-ruby">
+value = header + &quot;.&quot; + payload + &quot;.&quot; # base64urlエンコード済みのヘッダーとペイロードを「.」で繋いだ形のものを用います。
+signature = hash256(value, secret_key);
+</code></pre>
+
+<p>これが署名のすべてです。</p>
+
+<h2 id="jwtの完成形">JWTの完成形</h2>
+
+<p>これでJWTのすべてが揃いました。ヘッダー、ペイロード、そして署名です。これらを「.」で繋いだものがJWTとなります。</p>
+
+<pre><code class="language-ruby">JWT = &quot;#{header}.#{payload}.#{signature}&quot;
+</code></pre>
+
+<h1 id="jwtの使われ方">JWTの使われ方</h1>
+
+<p>↑まででJWTの具体的な形を見てきました。しかし、まだどのように使われるかが全くわかりません。なので、実際にどのような使われ方があるのか見ていきます。</p>
+
+<h2 id="アルゴリズムhs256の場合">アルゴリズムHS256の場合</h2>
+
+<p>署名のところでもHS256は扱いましたが、共通の鍵を用いて署名と検証を行います。なので、以下のようなケースが想定されます。あくまで一例です。</p>
+
+<p>1, まず、どのサービスにでもあるようなログインを行います。利用可能ユーザーであればJWTを返却します
+<img src="https://qiita-image-store.s3.amazonaws.com/0/155328/fc24a1a2-5ffb-922d-2a6e-f1d3c975b25f.png" alt="hoge.png" /></p>
+
+<p>2, ユーザーはJWTを用いてサービスのAPIにアクセスします。
+<img src="https://qiita-image-store.s3.amazonaws.com/0/155328/3ac5bde7-f3c2-3132-0b0f-92e9121f6ffc.png" alt="hoge.png" /></p>
+
+<p>となります。2の検証ですが、署名部は秘密鍵を保有しているコンピューターにしか生成できません。そしてヘッダー、ペイロードが改変されていると、その署名と食い違いが発生するので、改変がわかる仕組みになっています。例えば次のJWTが発行されたとします。</p>
+
+<pre><code class="language-text">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDJ9.UqRu8fGnUAmn-Z_wwsgGVNTXANkIiDdEbj-BdZRafks
+</code></pre>
+
+<pre><code class="language-bash:header">$ echo eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 | base64 -d
+{&quot;alg&quot;:&quot;HS256&quot;,&quot;typ&quot;:&quot;JWT&quot;}
+</code></pre>
+
+<pre><code class="language-bash:payload">$ echo eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDJ9 | base64 -d
+{&quot;sub&quot;:&quot;1234567890&quot;,&quot;name&quot;:&quot;John Doe&quot;,&quot;iat&quot;:151623902}
+</code></pre>
+
+<p>もしペイロードを</p>
+
+<pre><code class="language-text">{&quot;sub&quot;:&quot;1234567890&quot;,&quot;name&quot;:&quot;cat dog&quot;,&quot;iat&quot;:151623902}
+</code></pre>
+
+<p>に変えた場合、payloadが</p>
+
+<pre><code class="language-text">c3ViOjEyMzQ1Njc4OTAgbmFtZTpjYXQgZG9nIGlhdDoxNTE2MjM5MDIK
+</code></pre>
+
+<p>に変わります。ですが署名はクライアント側では改変不可です。(秘密鍵が漏洩している場合はその限りではない)
+なので、サーバー側で、もう一度、ヘッダーとペイロードから署名を作成し、送られてきた署名と一致するかどうかで検証が可能となります。(実際にはそのような処理を書くのはやめて、ライブラリに処理を任せましょう。)</p>
+
+<p>以上がHS256の場合の一例です。認証サーバーを独立させている場合はこの方法だといろいろ辛くなってきます。共通鍵を認証サーバーとその他Webサーバーで共有することは漏洩の危険性が高まります。よって認証サーバーを立てている場合、公開鍵暗号方式を用いるアルゴリズムを使ったJWTを生成するほうが賢明に思えます。</p>
+
+<h2 id="rs256の場合">RS256の場合</h2>
+
+<p>RS256はHS256と異なり、公開鍵、秘密鍵のペアを使用します。</p>
+
+<p>こちらも具体例を想定してみます。
+<img src="https://qiita-image-store.s3.amazonaws.com/0/155328/febebfce-ca85-ef6a-b77a-55c61f85a685.png" alt="hoge.png" />
+1, 認証サーバーにログインに必要な情報を送る
+2, 秘密鍵を用いてJWT生成
+3, クライアントにJWTを返却
+4, 3のJWTを用いてサービスのAPIを叩く
+5, JWTの検証
+6, サービスの処理
+7, クライアントにレスポンス</p>
+
+<p>と言った感じになります。</p>
+
+<p>公開鍵暗号方式を用いたため、署名を生成する認証サーバー以外は公開鍵を保持するだけでよくなりました。
+これでサーバーやサービスが増えても公開鍵を保有するだけでJWTの検証が可能になりました。</p>
+
+<h1 id="まとめ">まとめ</h1>
+
+<p>今更感はありますが、JWTについてまとめました。もしかしたら、現在使っているサービスのCookieにJWTが付与されているケースもあるかもしれません。そういう時は<code>base64 -d</code> でどんなものか確認してみると面白いかもしれません。</p>
+
+</main>
+
+    <footer>
+      
+<script>
+(function() {
+  function center_el(tagName) {
+    var tags = document.getElementsByTagName(tagName), i, tag;
+    for (i = 0; i < tags.length; i++) {
+      tag = tags[i];
+      var parent = tag.parentElement;
+      
+      if (parent.childNodes.length === 1) {
+        
+        if (parent.nodeName === 'A') {
+          parent = parent.parentElement;
+          if (parent.childNodes.length != 1) continue;
+        }
+        if (parent.nodeName === 'P') parent.style.textAlign = 'center';
+      }
+    }
+  }
+  var tagNames = ['img', 'embed', 'object'];
+  for (var i = 0; i < tagNames.length; i++) {
+    center_el(tagNames[i]);
+  }
+})();
+</script>
+
+      
+    </footer>
+  </body>
+</html>
+
