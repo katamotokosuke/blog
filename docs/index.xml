@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>カタモトの/dev/null</title>
@@ -21,16 +21,18 @@
 まだぼんやりしていて分かりにくいですが、各属性がどのようなものなのかもう少し具体的に見ていくことにします。その後、実際にどのように使っていくかを見ると理解はしやすくなります。
 ヘッダー属性 ヘッダーにはどのようなアルゴリズムを用いて署名を行っているかやトークンのタイプの2つで構成されています。
 例：
-{ &amp;quot;alg&amp;quot;: &amp;quot;RS256&amp;quot;, &amp;quot;typ&amp;quot;: &amp;quot;JWT&amp;quot; }  この文字列をbase64urlエンコードしたものがJWTのヘッダーとなります。プログラムっぽく書くならばこんな感じです。
-header = base64url_encode(&#39;{&amp;quot;alg&amp;quot;:&amp;quot;RS256&amp;quot;,&amp;quot;typ&amp;quot;:&amp;quot;JWT&amp;quot;}&#39;)  ヘッダーに関しては以上です。とても単純な仕様ですね。
+{ &amp;#34;alg&amp;#34;: &amp;#34;RS256&amp;#34;, &amp;#34;typ&amp;#34;: &amp;#34;JWT&amp;#34; } この文字列をbase64urlエンコードしたものがJWTのヘッダーとなります。プログラムっぽく書くならばこんな感じです。
+header = base64url_encode(&amp;#39;{&amp;#34;alg&amp;#34;:&amp;#34;RS256&amp;#34;,&amp;#34;typ&amp;#34;:&amp;#34;JWT&amp;#34;}&amp;#39;) ヘッダーに関しては以上です。とても単純な仕様ですね。
 ペイロード 実際に2者間で受け渡ししたい実体の入る属性です。要領はヘッダーと同じです。 例：
-{ &amp;quot;exp&amp;quot;: &amp;quot;1550905975&amp;quot;, &amp;quot;name&amp;quot;: &amp;quot;k_k_hogetaro&amp;quot;, &amp;quot;is_engineer&amp;quot;: true }  ヘッダーと同じくペイロードもbase64urlエンコードしたものとなります。 ヘッダーと違う点を挙げるとするといくつか予約語が定義されています。上の例であるとexpは仕様で定められた予約のkeyとなります。その他の予約語は仕様書を参照してみてください。
+{ &amp;#34;exp&amp;#34;: &amp;#34;1550905975&amp;#34;, &amp;#34;name&amp;#34;: &amp;#34;k_k_hogetaro&amp;#34;, &amp;#34;is_engineer&amp;#34;: true } ヘッダーと同じくペイロードもbase64urlエンコードしたものとなります。 ヘッダーと違う点を挙げるとするといくつか予約語が定義されています。上の例であるとexpは仕様で定められた予約のkeyとなります。その他の予約語は仕様書を参照してみてください。
 署名 ペイロード属性はbase64urlエンコードされているだけですので、このままだとデコードすれば中身を確認でき、改変できてしまいます。それだと困る場合がいろいろあります。例えばCookieの値とか。そこで署名を行い、改変の有無を検証可能なものにします。 ハッシュアルゴリズムHS256のケースを例とします。他のアルゴリズムのケースも後述します。 HS256は共通の秘密鍵で署名、検証を行います。
 プログラムのように書くと以下のようになります。
-value = header + &amp;quot;.&amp;quot; + payload + &amp;quot;.&amp;quot; # base64urlエンコード済みのヘッダーとペイロードを「.」で繋いだ形のものを用います。 signature = hash256(value, secret_key);  これが署名のすべてです。
+value = header + &amp;#34;.&amp;#34; + payload + &amp;#34;.&amp;#34; # base64urlエンコード済みのヘッダーとペイロードを「.」で繋いだ形のものを用います。 signature = hash256(value, secret_key); これが署名のすべてです。
 JWTの完成形 これでJWTのすべてが揃いました。ヘッダー、ペイロード、そして署名です。これらを「.」で繋いだものがJWTとなります。
-JWT = &amp;quot;#{header}.#{payload}.#{signature}&amp;quot;  JWTの使われ方 ↑まででJWTの具体的な形を見てきました。しかし、まだどのように使われるかが全くわかりません。なので、実際にどのような使われ方があるのか見ていきます。
-アルゴリズムHS256の場合 署名のところでもHS256は扱いましたが、共通の鍵を用いて署名と検証を行います。なので、以下のようなケースが想定されます。あくまで一例です。</description>
+JWT = &amp;#34;#{header}.#{payload}.#{signature}&amp;#34; JWTの使われ方 ↑まででJWTの具体的な形を見てきました。しかし、まだどのように使われるかが全くわかりません。なので、実際にどのような使われ方があるのか見ていきます。
+アルゴリズムHS256の場合 署名のところでもHS256は扱いましたが、共通の鍵を用いて署名と検証を行います。なので、以下のようなケースが想定されます。あくまで一例です。
+1, まず、どのサービスにでもあるようなログインを行います。利用可能ユーザーであればJWTを返却します 2, ユーザーはJWTを用いてサービスのAPIにアクセスします。 となります。2の検証ですが、署名部は秘密鍵を保有しているコンピューターにしか生成できません。そしてヘッダー、ペイロードが改変されていると、その署名と食い違いが発生するので、改変がわかる仕組みになっています。例えば次のJWTが発行されたとします。
+eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDJ9.UqRu8fGnUAmn-Z_wwsgGVNTXANkIiDdEbj-BdZRafks $ echo eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9 | base64 -d {&amp;quot;alg&amp;quot;:&amp;quot;HS256&amp;quot;,&amp;quot;typ&amp;quot;:&amp;quot;JWT&amp;quot;} $ echo eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDJ9 | base64 -d {&amp;quot;sub&amp;quot;:&amp;quot;1234567890&amp;quot;,&amp;quot;name&amp;quot;:&amp;quot;John Doe&amp;quot;,&amp;quot;iat&amp;quot;:151623902} もしペイロードを</description>
     </item>
     
     <item>
@@ -40,14 +42,15 @@ JWT = &amp;quot;#{header}.#{payload}.#{signature}&amp;quot;  JWTの使われ方 
       
       <guid>https://katamotokosuke.github.io/blog/post/good-bye-qiita/</guid>
       <description>対象  Qiitaから脱したい Qiitaにはエモ記事が書けないので、そういった記事を独自のブログの方に書きたい  hugoとは https://gohugo.io/
-Hugo is one of the most popular open-source static site generators. With its amazing speed and flexibility, Hugo makes building websites fun again.  Hugoは人気のあるオープンソースの静的サイトジェネレータの1つである。 半端ないスピードと柔軟性で、Hugoは再びウェブサイトの構築を楽しくするぜ。
+Hugo is one of the most popular open-source static site generators. With its amazing speed and flexibility, Hugo makes building websites fun again. Hugoは人気のあるオープンソースの静的サイトジェネレータの1つである。 半端ないスピードと柔軟性で、Hugoは再びウェブサイトの構築を楽しくするぜ。
 と公式HPには書いてあります。
 インストール プラットフォームによってインストール方法が異なります。 Mac
-$ brew install hugo  Win choco
-$ choco install hugo -confirm  Win scoop
-$ scoop install hugo  Linux snap
-$ snap install hugo  などなど、、、。さまざまなPFに対応しています。 https://gohugo.io/getting-started/installing
-さっそくブログを作ってみる 雛形作成 雛形を作成するために以下のコマンドを実行します。</description>
+$ brew install hugo Win choco
+$ choco install hugo -confirm Win scoop
+$ scoop install hugo Linux snap
+$ snap install hugo などなど、、、。さまざまなPFに対応しています。 https://gohugo.io/getting-started/installing
+さっそくブログを作ってみる 雛形作成 雛形を作成するために以下のコマンドを実行します。
+$ hugo new site site-demo &amp;amp;&amp;amp; cd site-demo なにやら生成されたようです</description>
     </item>
     
     <item>
@@ -57,27 +60,7 @@ $ snap install hugo  などなど、、、。さまざまなPFに対応してい
       
       <guid>https://katamotokosuke.github.io/blog/post/mysql-alter-table/</guid>
       <description>はじめに mysql5.6の話をします。それ以上のバージョンでも通じる話ではあると思います。 どんなシステムでも本番稼働中にindexを貼りたい、テーブル定義(カラム名、型、並び順&amp;hellip;etc)の変更をしたいことは往々してあると思います。そんな時はalter tableコマンドを叩きたい気分になります。安直にコマンドをぶっ叩くとやらかしてしまう可能性があります。今後もやらかさないためにまとめておきます。
-環境 mysql&amp;gt; status; -------------- mysql Ver 14.14 Distrib 5.6.42, for Linux (x86_64) using EditLine wrapper Connection id:	3 Current database:	Current user:	root@localhost SSL:	Not in use Current pager:	stdout Using outfile:	&#39;&#39; Using delimiter:	; Server version:	5.6.42 MySQL Community Server (GPL) Protocol version:	10 Connection:	Localhost via UNIX socket Server characterset:	latin1 Db characterset:	latin1 Client characterset:	latin1 Conn. characterset:	latin1 UNIX socket:	/var/run/mysqld/mysqld.</description>
-    </item>
-    
-    <item>
-      <title>社会人学生を約半年やった所感</title>
-      <link>https://katamotokosuke.github.io/blog/post/worker-and-college-students/</link>
-      <pubDate>Wed, 26 Dec 2018 21:53:50 +0900</pubDate>
-      
-      <guid>https://katamotokosuke.github.io/blog/post/worker-and-college-students/</guid>
-      <description>社会人学生とは 社会人学生（しゃかいじんがくせい）とは、社会人として生きている者が、学生として大学に入学すること。
-https://ja.wikipedia.org/wiki/%E7%A4%BE%E4%BC%9A%E4%BA%BA%E5%AD%A6%E7%94%9F
-社会人としての自分 Web会社にてエンジニアとして働いています。主にサーバーサイドです。Rubyが割と好きです。座右の銘は「運用でカバー」
-学生としての自分 大学（通信制）１年生です。帝京大学という大学です。情報科学を学んでいます。
-学生になる方法 通信制であれば全日制の大学のように科目試験を受けて、他のライバルたちと戦って入学するほど狭き門ではないです。 帝京大学のCS学科は願書と志望動機のみで合格することが可能です。ですので、やることは願書と志望動機を期日を守って提出するだけです。そんなに難しいことはないです。
-#日常はこんな感じ まず、3ヶ月に1回単位修得試験があります。それに向けてレポートを提出して、それが合格すれば試験が受けられるようになるシステムです。そして試験も合格だと単位がいただけます。適当にレポートを書くと普通に不合格にされました。
-平日 9~20時くらいまで仕事です。 21~24時くらいまで勉強です。
-休日 9~12時まで勉強です。午後は適当に過ごしています。
-これくらいでレポートは作成できると思います。なので若干きついくらいでこなせない分量ではないです。 3ヶ月で３科目くらいです。
-メリット 4年頑張れば情報科学の学士が取得できます。 通信なので15万円/年くらいの学費で通えます。半端なく安いです。
-デメリット 時間の不足により技術のキャッチアップが大変です。 趣味にあてる時間の減少します。
-所感 入学する前は面白そうな本を好きなだけ読んでましたが、入学するとそうはいかなくなりました。個人的にあまり興味のない西洋史だとか社会学のような本を読まねばならず、その辺は大変です。本当はコンパイラだとか機械学習のことを学びたいのですが。 あとは前述しましたが、気になる技術を試す時間が減少します。まだこのあたりを解決する方法は見つけられてません。いい案があれば教えていただけると嬉しいです。 基本はe-ラーニングですが、たまに対面授業も行われます。みなさん割と仲良くしていて「ぼ、僕も頑張ろう。。。」とモチベの維持にもなっています。そして学食がうまい、安い。 私はそこまで利用できてませんが、世の中のさまざま学割を享受できると思います。まぁ常識の範囲内で使いましょう。 そして少し面倒な誘いに対して「今日はレポートの期限が近いので。。。」みたいな言い訳が行使できます。これも常識の範囲内で使いましょう。使いすぎると友達が減ります。 プログラミングをする科目もありますが、正直仕事でプログラムを書いている方からすれば寝ててもできるくらい楽勝です。この辺りは最小努力で最大単位を目指しましょう。</description>
+環境 mysql&amp;gt; status; -------------- mysql Ver 14.14 Distrib 5.6.42, for Linux (x86_64) using EditLine wrapper Connection id:	3 Current database:	Current user:	root@localhost SSL:	Not in use Current pager:	stdout Using outfile:	&#39;&#39; Using delimiter:	; Server version:	5.6.42 MySQL Community Server (GPL) Protocol version:	10 Connection:	Localhost via UNIX socket Server characterset:	latin1 Db characterset:	latin1 Client characterset:	latin1 Conn. characterset:	latin1 UNIX socket:	/var/run/mysqld/mysqld.sock Uptime:	2 min 34 sec Threads: 2 Questions: 10 Slow queries: 0 Opens: 67 Flush tables: 1 Open tables: 60 Queries per second avg: 0.</description>
     </item>
     
     <item>
@@ -87,15 +70,15 @@ https://ja.wikipedia.org/wiki/%E7%A4%BE%E4%BC%9A%E4%BA%BA%E5%AD%A6%E7%94%9F
       
       <guid>https://katamotokosuke.github.io/blog/post/rails-autoload_path/</guid>
       <description>環境  Ruby 2.5.1 Rails 5.2.0  autoload_pathsの概要 例:
-class Hoge &amp;lt; SuperHoge; end  のようにモデルを定義したとします。Hogeは未定義の場合定数作成され、定義済みであればオープンクラスされるためautoload_pathsの出番なしですが、SuperHogeのほうが未定義だった場合autoload_pathsを元に定数を探索しに行きます。 autoload_pathsがあるので
-require &#39;super_hoge&#39;  といちいち書かなくてもよくなっています。
-puts ActiveSupport::Dependencies.autoload_paths RAILS_ROOT/app/assets RAILS_ROOT/app/channels RAILS_ROOT/app/controllers RAILS_ROOT/app/controllers/concerns RAILS_ROOT/app/helpers RAILS_ROOT/app/jobs RAILS_ROOT/app/mailers RAILS_ROOT/app/models RAILS_ROOT/app/models/concerns ...etc  みたいにActiveSupport::Dependencies.autoload_pathsの結果が探索の対象になります。 詳しくはwebで(https://railsguides.jp/autoloading_and_reloading_constants.html)
+class Hoge &amp;lt; SuperHoge; end のようにモデルを定義したとします。Hogeは未定義の場合定数作成され、定義済みであればオープンクラスされるためautoload_pathsの出番なしですが、SuperHogeのほうが未定義だった場合autoload_pathsを元に定数を探索しに行きます。 autoload_pathsがあるので
+require &amp;#39;super_hoge&amp;#39; といちいち書かなくてもよくなっています。
+puts ActiveSupport::Dependencies.autoload_paths RAILS_ROOT/app/assets RAILS_ROOT/app/channels RAILS_ROOT/app/controllers RAILS_ROOT/app/controllers/concerns RAILS_ROOT/app/helpers RAILS_ROOT/app/jobs RAILS_ROOT/app/mailers RAILS_ROOT/app/models RAILS_ROOT/app/models/concerns ...etc みたいにActiveSupport::Dependencies.autoload_pathsの結果が探索の対象になります。 詳しくはwebで(https://railsguides.jp/autoloading_and_reloading_constants.html)
 実際のソースコードを見てみる rubyにはさまざまなフックメソッドが提供されていてその一つに定数が見つからないときにModule#const_missingというものがあります。これをActiveSupport::Dependencies::ModuleConstMissingではオーバーライドしています。このmoduleはrubyのModuleにincludeされているのでRailsを使う際に定数が見つからないとこのメソッドのconst_missingが呼ばれることになります。なのでこれを見ていくことにします。
 https://github.com/rails/rails/blob/5-2-0/activesupport/lib/active_support/dependencies.rb#L191
-def const_missing(const_name) from_mod = anonymous? ? guess_for_anonymous(const_name) : self Dependencies.load_missing_constant(from_mod, const_name) end  from_modはどの名前空間に属するかを特定しています。そして定数探索の旅が始まる！
+def const_missing(const_name) from_mod = anonymous? ? guess_for_anonymous(const_name) : self Dependencies.load_missing_constant(from_mod, const_name) end from_modはどの名前空間に属するかを特定しています。そして定数探索の旅が始まる！
 ActiveSupport::Dependencies#load_missing_constant https://github.com/rails/rails/blob/master/activesupport/lib/active_support/dependencies.rb#L489
 2018/05/23時点のソースをのせる。
-def load_missing_constant(from_mod, const_name) unless qualified_const_defined?(from_mod.name) &amp;amp;&amp;amp; Inflector.constantize(from_mod.name).equal?(from_mod) raise ArgumentError, &amp;quot;A copy of #{from_mod} has been removed from the module tree but is still active!</description>
+def load_missing_constant(from_mod, const_name) unless qualified_const_defined?(from_mod.name) &amp;amp;&amp;amp; Inflector.constantize(from_mod.name).equal?(from_mod) raise ArgumentError, &amp;#34;A copy of #{from_mod}has been removed from the module tree but is still active!</description>
     </item>
     
   </channel>
